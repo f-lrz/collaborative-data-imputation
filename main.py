@@ -26,10 +26,12 @@ if __name__ == "__main__":
 
     # read nord pool csv file
     df = read_nordpool_csv(params['nord_pool'])
+    logger.info(f"NORDPOOL dataframe head:\n{df.head()}")
     logger.success("Data loaded.")
 
     #  melt dataframe for matrix factorization and retain non-missing values
     df_melt_without_nan, _ = melt_dataframe(df, id_vars_='periodId', var_name_='farmId', value_name_='power')
+    logger.info(f"Melted dataframe head:\n{df_melt_without_nan.head(3)}")
     logger.success("Melt Dataframe created.")
 
     # split to training and validation sets
@@ -38,10 +40,12 @@ if __name__ == "__main__":
                                                                     block = params['block'],
                                                                     blocksize = params['blocksize'],
                                                                     seed = params['seed'])
+    logger.info(f"Training dataframe head:\n{training_df_datetime.head(3)}")
     logger.success("Train/Test data splitted.")
 
     # match training/validation periods, farms
     filtered_training_df, filtered_validation_df = filter_data_by_common_periods_farms(training_df_datetime, validation_df_datetime)
+    logger.info(f"Filtered Training dataframe head:\n{filtered_training_df.head(3)}")
     logger.success("Train/Test data keys matched.")
 
     # normalize data

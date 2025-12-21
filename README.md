@@ -1,42 +1,56 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14187972.svg)](https://doi.org/10.5281/zenodo.14187972)
 ![Status](https://img.shields.io/badge/status-development-orange)
 
-# Collaborative-Data-Imputation
+## Collaborative-Data-Imputation
 
 <img src="img/colab_data_imputation.png" alt="Image Alt Text" width="700"/>
 
-### Reconstruction of wind power data
+### Wind Power Data Reconstruction
 
-In power system operations and electricity markets, missing data is a common problem in practice. This issue is especially significant when large-scale data-driven methods are used for point or probabilistic wind power forecasting. Data imputation methods, such as k-nearest neighbors and factor models, are crucial for filling in missing values before training forecasting models. These techniques ensure data completeness, which is essential for the accuracy of data-driven forecasting approaches.
+In power system operations and electricity markets, missing data is a pervasive challenge in practice. Missing observations can arise from sensor faults, communication failures, or maintenance outages. This issue becomes particularly critical when large-scale, data-driven approaches are applied to point and probabilistic wind power forecasting, where data quality directly affects model performance and therefore decision making.
 
-### Running the MLflow Experiment Script with Poetry
+To address this, data imputation techniques—such as k-nearest neighbors (k-NN) and factor models—are commonly employed to reconstruct incomplete datasets before training forecasting models. Effective imputation ensures data completeness and consistency, which are essential for the reliability and accuracy of modern machine-learning–based forecasting methods.
 
-1. **Install Poetry**
+### MLflow Experiments
+
+MLflow is used to systematically compare and evaluate missing-data imputation algorithms, making it easier to identify the best-performing approach for a given dataset.
+
+1. **Install UV (Dependency Manager)**
 
     ```bash
-    pip install poetry
+    pip install uv
     ```
 
 2. **Install Project Dependencies**
 
-    Install the project dependencies, including MLflow, by running the following command in your project directory:
+    Install all required dependencies, including MLflow::
 
     ```bash
-    poetry install
+    uv sync
     ```
 
-3. **Running the Experiments**
+3. **Start Mlflow server**
 
-    To run the `experiment.py` script within the Poetry environment, use the following command:
+    Launch the MLflow UI locally:
 
     ```bash
-    poetry run python experiment.py
+    uv run mlflow ui
     ```
 
-4. **Viewing MLflow Tracking**:
+3. **Run the Experiments**
+
+    Execute the experiment pipeline:
 
     ```bash
-    mlflow ui
+    uv run main.py
     ```
 
-After starting the MLflow UI, open your browser and go to `http://127.0.0.1:5000` to view experiment results, including parameters, metrics, and artifacts.
+4. **View Experiment Results**:
+
+    Open your browser and navigato to `http://127.0.0.1:5000`.
+     
+    From the MLflow UI, you can explore:
+    * Experiment runs
+    * Model parameters and hyperparameters
+    * Evaluation metrics
+    * Logged artifacts (e.g., reconstructed datasets and plots)

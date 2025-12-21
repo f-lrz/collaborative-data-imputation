@@ -3,7 +3,7 @@
 /data/Y-NP.csv
 /mlartifacts/*
 planning.txt
-
+.DS_Store
 
 # Ignore IPython Notebook checkpoints
 **/ipynb_checkpoints/

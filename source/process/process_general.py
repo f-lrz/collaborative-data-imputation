@@ -6,10 +6,10 @@ from sklearn.model_selection import train_test_split
 def melt_dataframe(df, id_vars_='periodId', var_name_='farmId', value_name_='power'):
     " Melt a DataFrame to have a single column for power values. "
 
-    assert isinstance(df, pd.DataFrame), "Input must be a pandas DataFrame."
-    assert id_vars_ in df.columns, f"Column '{id_vars_}' not found in DataFrame."
-    assert var_name_ in df.columns, f"Column '{var_name_}' not found in DataFrame."
-    assert value_name_ in df.columns, f"Column '{value_name_}' not found in DataFrame."
+#     assert isinstance(df, pd.DataFrame), "Input must be a pandas DataFrame."
+#     assert id_vars_ in df.columns, f"Column '{id_vars_}' not found in DataFrame."
+#     assert var_name_ in df.columns, f"Column '{var_name_}' not found in DataFrame."
+#     assert value_name_ in df.columns, f"Column '{value_name_}' not found in DataFrame."
 
     df.index.names = [id_vars_]
     df_melt_with_nan = pd.melt(df.reset_index(), id_vars=id_vars_, value_vars=list(df.columns), var_name=var_name_, value_name=value_name_)
