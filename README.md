@@ -39,6 +39,12 @@ MLflow is used to systematically compare and evaluate missing-data imputation al
 
 3. **Run the Experiments**
 
+    Set paramaters to test in `config.py`
+
+    ```bash
+    nano config.py
+    ```
+
     Execute the experiment pipeline:
 
     ```bash
