@@ -1,4 +1,0 @@
-mlflow==2.16.2
-loguru==0.7.2
-sortedcontainers==2.4.0
-pytest==8.3.3
