@@ -5,11 +5,11 @@ from pathlib import Path
 current_path = Path(__file__).resolve().parent
 
 params = {'uri': 'http://127.0.0.1:5000',
-            'exp_name': 'Imputation',
+            'exp_name': 'Imputation Bahia',
             'path': current_path,
-            'model': 'grouped-average', #'lag-farm-collaborative', # 'latent-factor', #'period-collaborative', 'grouped-average', 'farm-collaborative
+            'model': 'period-collaborative', #'lag-farm-collaborative', # 'latent-factor', #'period-collaborative', 'grouped-average', 'farm-collaborative
             'seed': 42,
-            'nord_pool': 'data/Y-NP.csv',
+            'nord_pool': 'data/dataset_ventos_bahia_corrigido.csv',
             'test_size' : 0.3,
             'block':True,
             'blocksize': 168,

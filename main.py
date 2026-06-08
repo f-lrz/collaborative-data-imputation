@@ -1,3 +1,4 @@
+import pandas as pd
 import mlflow
 from loguru import logger
 from copy import deepcopy
@@ -25,7 +26,9 @@ if __name__ == "__main__":
     logger.info(f'Experiment name {exp_name}')
 
     # read nord pool csv file
-    df = read_nordpool_csv(params['nord_pool'])
+    df = pd.read_csv(params['nord_pool'])
+    df['periodId'] = pd.to_datetime(df['periodId'])
+    df.set_index('periodId', inplace=True)
     logger.info(f"NORDPOOL dataframe head:\n{df.head()}")
     logger.success("Data loaded.")
 
@@ -45,6 +48,10 @@ if __name__ == "__main__":
 
     # match training/validation periods, farms
     filtered_training_df, filtered_validation_df = filter_data_by_common_periods_farms(training_df_datetime, validation_df_datetime)
+    
+    ESTACAO_ALVO = 'ITABERABA' # Opções: 'SALVADOR', 'LEM', 'CARAVELAS', 'ITABERABA'
+    filtered_validation_df = filtered_validation_df[filtered_validation_df['farmId'] == ESTACAO_ALVO]
+    
     logger.info(f"Filtered Training dataframe head:\n{filtered_training_df.head(3)}")
     logger.success("Train/Test data keys matched.")
 
