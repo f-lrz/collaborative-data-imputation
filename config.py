@@ -7,7 +7,7 @@ current_path = Path(__file__).resolve().parent
 params = {'uri': 'http://127.0.0.1:5000',
             'exp_name': 'Imputation Bahia',
             'path': current_path,
-            'model': 'period-collaborative', #'lag-farm-collaborative', # 'latent-factor', #'period-collaborative', 'grouped-average', 'farm-collaborative
+            'model': 'latent-factor', #'lag-farm-collaborative', # 'latent-factor', #'period-collaborative', 'grouped-average', 'farm-collaborative
             'seed': 42,
             'nord_pool': 'data/dataset_ventos_bahia_corrigido.csv',
             'test_size' : 0.3,
@@ -24,11 +24,11 @@ params = {'uri': 'http://127.0.0.1:5000',
             'lookup': 'both',
             'other_farms': True,
             #####################
-            'latent_dimensions': 2,  # latent factor
+            'latent_dimensions': 3,  # latent factor
             'n_epochs': 50,
             'warm_start': True,
-            'lambda_reg_U': 5,
-            'lambda_reg_P': 5,
+            'lambda_reg_U': 5.0,
+            'lambda_reg_P': 5.0,
             'learning_rate': None,
             'solver': 'als'
             }
