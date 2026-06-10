@@ -24,7 +24,7 @@ params = {'uri': 'http://127.0.0.1:5000',
             'lookup': 'both',
             'other_farms': True,
             #####################
-            'latent_dimensions': 3,  # latent factor
+            'latent_dimensions': 2,  # latent factor
             'n_epochs': 50,
             'warm_start': True,
             'lambda_reg_U': 5.0,
