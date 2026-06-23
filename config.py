@@ -9,7 +9,7 @@ params = {'uri': 'http://127.0.0.1:5000',
             'path': current_path,
             'model': 'period-collaborative', #'lag-farm-collaborative', # 'latent-factor', #'period-collaborative', 'grouped-average', 'farm-collaborative
             'seed': 42,
-            'nord_pool': 'data/dataset_ventos_bahia_corrigido.csv',
+            'nord_pool': 'data/dataset_multivariado_bahia.csv',
             'test_size' : 0.3,
             'block':False,
             'blocksize': 168,
@@ -18,7 +18,7 @@ params = {'uri': 'http://127.0.0.1:5000',
             #####################
             'based_on': 'others-lags-farms',  # period/farm/lag-farm collaborative filtering
             'neighbors': 50,
-            'min_common_farms': 1,
+            'min_common_farms': 2,
             'min_common_periods': 50,
             'nr_lags': 4,
             'lookup': 'both',

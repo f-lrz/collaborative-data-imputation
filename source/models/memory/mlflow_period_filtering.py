@@ -105,21 +105,36 @@ class PeriodCollaborativeFiltering(PythonModel):
 
 
     def predict(self, power_dict):
-            """
-            Make power predictions for a dictionary of period-farm pairs.
-            """
-            assert isinstance(power_dict, dict), "Input power_dict must be a dictionary."
-            predictions = []
-            targets = []
-            periods = []
-            farms = []
-            for (period_i, farm_m), target_power in power_dict.items():
+        """
+        Make power predictions for a dictionary of period-farm pairs.
+        """
+        assert isinstance(power_dict, dict), "Input power_dict must be a dictionary."
+        predictions = []
+        targets = []
+        periods = []
+        farms = []
+        
+        # Cache para armazenar a média histórica de treino por estação e evitar lentidão
+        fallback_averages = {}
+        
+        for (period_i, farm_m), target_power in power_dict.items():
+            # Se o período for inédito/futuro (out-of-sample), ele não terá vizinhos.
+            # Capturamos isso e aplicamos a média histórica de treino da estação correspondente.
+            if period_i not in self.neighbors:
+                if farm_m not in fallback_averages:
+                    vals = [v for (p, f), v in self.periodfarm2power.items() if f == farm_m]
+                    fallback_averages[farm_m] = np.mean(vals) if vals else 0.0
+                prediction = fallback_averages[farm_m]
+            else:
+                # Se o período já existe no histórico, segue o fluxo normal
                 prediction = self.compute_predictions(period_i, farm_m)
-                predictions.append(prediction)
-                targets.append(target_power)
-                periods.append(period_i)
-                farms.append(farm_m)
-            return predictions, targets, periods, farms
+                
+            predictions.append(prediction)
+            targets.append(target_power)
+            periods.append(period_i)
+            farms.append(farm_m)
+            
+        return predictions, targets, periods, farms
 
 
     @staticmethod
