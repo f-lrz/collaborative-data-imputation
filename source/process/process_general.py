@@ -59,8 +59,11 @@ def split_train_test(df, test_size=0.2, block=True, blocksize=48, seed=42):
         df_block = _block_shuffle(df, blocksize, seed)
         training_df, validation_df = train_test_split(df_block, test_size=test_size, shuffle=False)
     else:
-        # Split randomly if block is False
-        training_df, validation_df = train_test_split(df, test_size=test_size, random_state=seed)
+        # CORREÇÃO 1: Mudar de 'random_state=False' para 'shuffle=False'
+        # O scikit-learn por padrão embaralha as linhas mesmo com random_state. 
+        # Para ser cronológico, o shuffle PRECISA ser False.
+        training_df, validation_df = train_test_split(df, test_size=test_size, shuffle=False)
+        
     # Reset index for both training and validation DataFrames
     training_df.reset_index(drop=True, inplace=True)
     validation_df.reset_index(drop=True, inplace=True)
@@ -126,20 +129,25 @@ def preprocess_ids(training_df, validation_df):
 
     # Retain Ids of the training set in the validation set
     validation_df = validation_df[validation_df.farmId.isin(training_df.farmId)]
-    validation_df = validation_df[validation_df.periodId.isin(training_df.periodId)].reset_index(drop=True)
-    # Map datetimes
-    periodId = training_df.periodId.unique()
-    # Dictionary where the keys are the elements from periodId, and the values are the indices of those elements in the periodId
-    datetime2id_mapping = dict(zip(periodId, range(len(periodId))))
-    # Map the values in the periodId column of a pandas DataFrame using a mapping provided by datetime2id_mapping
+    
+    # CORREÇÃO 2: REMOVER/COMENTAR A LINHA ABAIXO
+    # Esta linha deletava todas as linhas de validação cujas datas não existiam no treino.
+    # Como a nossa divisão agora é cronológica pura (o teste acontece totalmente no futuro),
+    # nenhuma data do teste existirá no treino, fazendo o dataframe ficar VAZIO.
+    # validation_df = validation_df[validation_df.periodId.isin(training_df.periodId)].reset_index(drop=True)
+    
+    # CORREÇÃO 3: Ajustar o mapeamento de IDs de tempo para englobar ambos os conjuntos
+    all_periods = pd.concat([training_df['periodId'], validation_df['periodId']]).unique()
+    datetime2id_mapping = dict(zip(all_periods, range(len(all_periods))))
+    
+    # Map the values in the periodId column
     training_df.periodId = training_df.periodId.map(datetime2id_mapping)
     validation_df.periodId = validation_df.periodId.map(datetime2id_mapping)
     id2datetime_mapping = {v: k for k, v in datetime2id_mapping.items()}
+    
     # Map farms
     farmId = training_df.farmId.unique()
-    # Dictionary where the keys are the elements from farmId, and the values are the indices of those elements in the farmId
     farm2id_mapping = dict(zip(farmId, range(len(farmId))))
-    # Map the values in the farmId column of a pandas DataFrame using a mapping provided by farm2id_mapping
     training_df.farmId = training_df.farmId.map(farm2id_mapping)
     validation_df.farmId = validation_df.farmId.map(farm2id_mapping)
     id2farm_mapping = {v: k for k, v in farm2id_mapping.items()}
