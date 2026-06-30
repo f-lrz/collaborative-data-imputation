@@ -40,50 +40,62 @@ class FarmCollaborativeFiltering(PythonModel):
         sigma_power = np.sqrt(dev_power_values.dot(dev_power_values))
         return avg_power, dev_power, sigma_power
 
-    def pearson_similarity(self, common_periods, dev_power_i, sigma_power_i,  dev_power_j, sigma_power_j):
-        " Compute Pearson similarity between two wind farms. "
-        covariance = sum(dev_power_i[period] * dev_power_j[period] for period in common_periods)
-        weigth_ij = covariance / (sigma_power_i * sigma_power_j)
+    def pearson_similarity(self, common_periods, dev_power_i, dev_power_j):
+        " Compute Pearson similarity using only common periods. "
+        # Extrai apenas os desvios dos períodos em comum
+        dev_i_common = np.array([dev_power_i[p] for p in common_periods])
+        dev_j_common = np.array([dev_power_j[p] for p in common_periods])
+        
+        covariance = np.sum(dev_i_common * dev_j_common)
+        
+        # Calcula os sigmas locais estritamente sobre os períodos em comum
+        sigma_i_local = np.sqrt(np.sum(dev_i_common**2))
+        sigma_j_local = np.sqrt(np.sum(dev_j_common**2))
+        
+        if sigma_i_local == 0 or sigma_j_local == 0:
+            return 0.0
+            
+        weigth_ij = covariance / (sigma_i_local * sigma_j_local)
         return weigth_ij
 
     def compute_similarities(self):
         " Compute the similarities between wind farms. "
         logger.info('Start Data Imputation based on Wind Farms Similarity')
-        logger.info('List of Wind Farms ' + str(self.lst_farms))
+        
+        # 1. PRÉ-CÁLCULO: Calcula as médias e desvios de todas as variáveis de uma vez só 
+        for farm in self.lst_farms:
+            periods = self.farm2period[farm]
+            avg_power, dev_power, sigma_power = self.calculate_avg_and_deviation(farm, periods)
+            self.averages[farm] = avg_power
+            self.deviations[farm] = dev_power
+            self.sigmas[farm] = sigma_power
+
         # Iterate over the wind farms
         count=0
         for farm_i in self.lst_farms:
-            periods_i = self.farm2period[farm_i]  # Get the periods of farm_i
-            periods_i_set = set(periods_i)  # Convert periods_i to a set
-            # Calculate the average, deviation, and the sigma of power for farm_i
-            avg_power_i, dev_power_i, sigma_power_i = self.calculate_avg_and_deviation(farm_i, periods_i)
-            self.averages[farm_i] = avg_power_i  # Store the average power of farm_i
-            self.deviations[farm_i] = dev_power_i  # Store the deviation of power of farm_i
-            self.sigmas[farm_i] = sigma_power_i  # Store the sigma of power of farm_i
-            # Create a SortedList to store the similarities
+            periods_i_set = set(self.farm2period[farm_i])
+            dev_power_i = self.deviations[farm_i]
+            
             sl = SortedList()
-            # Iterate over the other wind farms
             for farm_j in self.lst_farms:
-                # Skip farm_i
                 if farm_j != farm_i:
-                    periods_j = self.farm2period[farm_j]  # Get the periods of farm_j
-                    periods_j_set = set(periods_j)  # Convert periods_j to a set
-                    common_periods = periods_i_set & periods_j_set  # Find the common periods
-                    if len(common_periods) >= self.min_common_periods:  # Check if the number of common periods is greater than min_common_periods
-                        _, dev_power_j, sigma_power_j = self.calculate_avg_and_deviation(farm_j, periods_j)
-                        # Compute the similarity between farm_i and farm_j
-                        w_ij = self.pearson_similarity(common_periods, dev_power_i, sigma_power_i,  dev_power_j, sigma_power_j)
-                        # Add the similarity to the SortedList
+                    periods_j_set = set(self.farm2period[farm_j])
+                    common_periods = periods_i_set & periods_j_set 
+                    
+                    if len(common_periods) >= self.min_common_periods:  
+                        dev_power_j = self.deviations[farm_j]
+                        
+                        # Passa apenas os desvios. O cálculo do sigma é feito lá dentro usando apenas as datas comuns.
+                        w_ij = self.pearson_similarity(common_periods, dev_power_i, dev_power_j)
+                        
                         sl.add((-w_ij, farm_j))
-                        # Keep only the K most similar wind farms
                         if len(sl) > self.K:
                             del sl[-1]
-            # Store the K most similar wind farms
             self.neighbors[farm_i] = sl
-            # Log the progress
             if count % 5 == 0:
                 logger.info('Wind Farms Processed: ' + str(count))
-            count += 1  # Increment the count
+            count += 1
+            
         return self.neighbors, self.averages, self.deviations, self.sigmas
 
     def compute_predictions(self, farm_i, period_m):

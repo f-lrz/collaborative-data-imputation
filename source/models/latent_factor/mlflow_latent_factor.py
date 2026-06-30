@@ -69,8 +69,19 @@ class LatentFactorModel(PythonModel):
         train_errors, valid_errors = [], []
         for epoch in range(n_epochs):
             # Update U and P
-            U = np.vstack(train_df.groupby(self.var_U).apply(lambda x: self.least_squares(x[[self.var_P, self.var_name]].values, P, lambda_reg_P)))
-            P = np.vstack(train_df.groupby(self.var_P).apply(lambda x: self.least_squares(x[[self.var_U, self.var_name]].values, U, lambda_reg_U)))
+            # --- Atualizar U explicitamente por índice ---
+            for u_idx, group in train_df.groupby(self.var_U):
+                # Extrai a matriz X e os targets para aquele período específico
+                X_vals = group[[self.var_P, self.var_name]].values
+                # Atualiza apenas a linha correspondente em U
+                U[u_idx] = self.least_squares(X_vals, P, lambda_reg_P)
+                
+            # --- Atualizar P explicitamente por índice ---
+            for p_idx, group in train_df.groupby(self.var_P):
+                # Extrai a matriz X e os targets para aquela variável(farm) específica
+                X_vals = group[[self.var_U, self.var_name]].values
+                # Atualiza apenas a linha correspondente em P
+                P[p_idx] = self.least_squares(X_vals, U, lambda_reg_U)
             # Compute training and validation errors
             train_preds = self.predict(U, P, train_df)
             train_error = self.compute_rmse(train_df[self.var_name].values, train_preds)

@@ -42,44 +42,66 @@ class PeriodCollaborativeFiltering(PythonModel):
         sigma_power = np.sqrt(dev_power_values.dot(dev_power_values))  # standard deviation
         return avg_power, dev_power, sigma_power
 
-    def pearson_similarity(self, common_periods, dev_power_i, sigma_power_i,  dev_power_j, sigma_power_j):
-        " Compute Pearson similarity between two wind farms. "
-        covariance = sum(dev_power_i[period] * dev_power_j[period] for period in common_periods)
-        weigth_ij = covariance / (sigma_power_i * sigma_power_j)
+    def pearson_similarity(self, common_farms, dev_power_i, dev_power_j):
+        " Compute Pearson similarity using only common farms/variables. "
+        # Extrai apenas os desvios das variáveis (farms) em comum naquele instante de tempo
+        dev_i_common = np.array([dev_power_i[farm] for farm in common_farms])
+        dev_j_common = np.array([dev_power_j[farm] for farm in common_farms])
+        
+        covariance = np.sum(dev_i_common * dev_j_common)
+        
+        # Calcula o sigma local estritamente sobre as variáveis em comum
+        sigma_i_local = np.sqrt(np.sum(dev_i_common**2))
+        sigma_j_local = np.sqrt(np.sum(dev_j_common**2))
+        
+        if sigma_i_local == 0 or sigma_j_local == 0:
+            return 0.0
+            
+        weigth_ij = covariance / (sigma_i_local * sigma_j_local)
         return weigth_ij
 
     def compute_period_similarities(self):
         """
         Compute period similarities based on collaborative filtering.
         """
+        logger.info('Start Data Imputation based on Period Similarity')
+        
+        # 1. PRÉ-CÁLCULO: Calcula médias e desvios de TODOS os períodos de uma vez
+        for period in self.lst_periods:
+            farms = self.period2farm[period]
+            avg_power, dev_power, sigma_power = self.calculate_avg_and_deviation(period, farms)
+            self.averages[period] = avg_power
+            self.deviations[period] = dev_power
+            self.sigmas[period] = sigma_power # Opcional agora
+            
         # Iterate over the periods
-        count=0
+        count = 0
         for period_i in self.lst_periods:
-            farms_i = self.period2farm[period_i]  # Get the farms for period_i
-            farms_i_set = set(farms_i)  # Convert farms_i to a set
-            avg_power_i, dev_power_i, sigma_power_i = self.calculate_avg_and_deviation(period_i, farms_i)
-            self.averages[period_i] = avg_power_i  # Store the average power of period_i
-            self.deviations[period_i] = dev_power_i  # Store the deviation of power of period
-            self.sigmas[period_i] = sigma_power_i  # Store the sigma of power of period_i
-            # Create a SortedList to store the similarities
+            farms_i_set = set(self.period2farm[period_i])
+            dev_power_i = self.deviations[period_i]
+            
             sl = SortedList()
             for period_j in self.lst_periods:
-                if period_j != period_i:  # Skip the same period
-                    farms_j = self.period2farm[period_j]  # Get the farms for period_j
-                    farms_j_set = set(farms_j)  # Convert farms_j to a set
-                    common_farms = farms_i_set & farms_j_set  # Get the common farms
-                    if len(common_farms) >= self.min_common_farms:  # Check if the number of common farms is greater than min_common_farms
-                        _, dev_power_j, sigma_power_j = self.calculate_avg_and_deviation(period_j, farms_j)
-                        # Compute the Pearson similarity between period_i and period_j
-                        w_ij = self.pearson_similarity(common_farms, dev_power_i, sigma_power_i,  dev_power_j, sigma_power_j)
-                        sl.add((-w_ij, period_j))  # Add the similarity to the SortedList
-                        if len(sl) > self.K:  # Keep only the K most similar periods
-                            del sl[-1]  # Delete the last element
-            self.neighbors[period_i] = sl  # Store the K most similar periods
-            # Log the progress
-            if count % 5000 == 0:
+                if period_j != period_i:
+                    farms_j_set = set(self.period2farm[period_j])
+                    common_farms = farms_i_set & farms_j_set 
+                    
+                    if len(common_farms) >= self.min_common_farms:
+                        dev_power_j = self.deviations[period_j]
+                        
+                        # Usa a nova função de similaridade corrigida
+                        w_ij = self.pearson_similarity(common_farms, dev_power_i, dev_power_j)
+                        sl.add((-w_ij, period_j))
+                        
+                        if len(sl) > self.K:
+                            del sl[-1]
+                            
+            self.neighbors[period_i] = sl
+            
+            if count % 1000 == 0:  # Diminuí o print para dar um feedback mais rápido
                 logger.info(f'Total processed periods: {count}')
-            count+=1
+            count += 1
+            
         logger.info(f'Total processed periods: {count}')
         return self.neighbors, self.averages, self.deviations, self.sigmas
 

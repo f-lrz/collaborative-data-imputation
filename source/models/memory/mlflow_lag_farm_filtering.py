@@ -56,14 +56,22 @@ class LagFarmDataImputation(PythonModel):
         count=0
         logger.info('Start Data Imputation based on Wind Farms Similarity')
         logger.info('List of Wind Farms ' + str(self.lst_farms))
+        
+        # PRÉ-CALCULO PARA TODAS AS VARIÁVEIS (BASE + LAGS)
+        for farm in self.lst_farms_lags:
+            if farm in self.farm2period:
+                periods = self.farm2period[farm]
+                avg_p, dev_p, sigma_p = self.calculate_avg_and_deviation(farm, periods)
+                self.averages[farm] = avg_p
+                self.deviations[farm] = dev_p
+                self.sigmas[farm] = sigma_p
+        
         # Iterate over the wind farms
         for farm_i in self.lst_farms:
             periods_i = self.farm2period[farm_i]  # Get the periods of farm_i
             periods_i_set = set(periods_i)  # Convert periods_i to a set
-            avg_power_i, dev_power_i, sigma_power_i = self.calculate_avg_and_deviation(farm_i, periods_i)  # Calculate the average, deviation, and sigma of power for farm_i
-            self.averages[farm_i] = avg_power_i
-            self.deviations[farm_i] = dev_power_i
-            self.sigmas[farm_i] = sigma_power_i
+            dev_power_i = self.deviations[farm_i]
+            sigma_power_i = self.sigmas[farm_i]
             # Create a SortedList to store the similarities
             sl = SortedList()
             if not self.other_farms:  # Include only lags of the same wind farm
@@ -77,7 +85,9 @@ class LagFarmDataImputation(PythonModel):
                     periods_j_set = set(periods_j)
                     common_periods = periods_i_set & periods_j_set  # Find the common periods
                     if len(common_periods) >= self.min_common_periods:  # Check if the number of common periods is greater than min_common_periods
-                        _, dev_power_j, sigma_power_j = self.calculate_avg_and_deviation(farm_j, periods_j)  # Calculate the average, deviation, and sigma of power for farm_j
+                        # Busca os valores já pré-calculados
+                        dev_power_j = self.deviations[farm_j]
+                        sigma_power_j = self.sigmas[farm_j]
                         w_ij = self.pearson_similarity(common_periods, dev_power_i, sigma_power_i, dev_power_j, sigma_power_j)
                         # Add the similarity to the SortedList
                         sl.add((-w_ij, farm_j))
