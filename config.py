@@ -8,7 +8,7 @@ params = {'uri': 'http://127.0.0.1:5000',
             'exp_name': 'Imputation Bahia',
             'path': current_path,
             'model': 'period-collaborative', #'lag-farm-collaborative', # 'latent-factor', #'period-collaborative', 'grouped-average', 'farm-collaborative
-            'seed': 42,
+            'seed': 42, 
             'nord_pool': 'data/dataset_multivariado_bahia.csv',
             'test_size' : 0.2,
             'block':False,

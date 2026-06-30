@@ -22,7 +22,7 @@ if __name__ == "__main__":
     
     # =====================================================================
     # LINHA PARA TESTE RÁPIDO
-    # df = df.loc['2019-01-01':'2019-12-31'] 
+    df = df.loc['2019-01-01':'2019-12-31'] 
     # =====================================================================
 
     lista_estacoes = ['SALVADOR', 'LEM', 'CARAVELAS', 'ITABERABA']
@@ -53,10 +53,10 @@ if __name__ == "__main__":
         df_estacao.iloc[indice_corte:, col_idx_vento] = np.nan
         
         # Melt do Contexto (Linha do tempo inteira, mas com vento futuro em NaN)
-        training_df_datetime, _ = melt_dataframe(df_estacao.reset_index(), id_vars_='periodId', var_name_='farmId', value_name_='power')
+        training_df_datetime, _ = melt_dataframe(df_estacao, id_vars_='periodId', var_name_='farmId', value_name_='power')
         
         # Melt do Gabarito (Para entregar à função de erro do MLflow)
-        validation_df_datetime, _ = melt_dataframe(df_teste_gabarito.reset_index(), id_vars_='periodId', var_name_='farmId', value_name_='power')
+        validation_df_datetime, _ = melt_dataframe(df_teste_gabarito, id_vars_='periodId', var_name_='farmId', value_name_='power')
 
         # --- Normalização e Mapeamento Padrão ---
         normalizer = Normalizer()

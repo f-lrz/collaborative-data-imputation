@@ -54,7 +54,7 @@ class LatentFactorModel(PythonModel):
         XtY = np.dot(X_subset.T, list_ids[:, 1])
         return np.linalg.solve(XtX, XtY).T  # Solve the linear system
 
-    def _alternating_least_squares(self, P, n_epochs, train_df, valid_df, lambda_reg_U, lambda_reg_P):
+    def _alternating_least_squares(self, U, P, n_epochs, train_df, valid_df, lambda_reg_U, lambda_reg_P):
         """
         Perform Alternating Least Squares (ALS) optimization.
         """
@@ -140,9 +140,9 @@ class LatentFactorModel(PythonModel):
         P = self.initialize_matrix(n_p, self.k, self.warm_start)  # Initialize matrix P
         U = self.initialize_matrix(n_u, self.k, self.warm_start)  # Initialize matrix U
         if solver == 'als':
-            U, P = self._alternating_least_squares(P=P, n_epochs = n_epochs,
-                                                    train_df=train_df, valid_df=valid_df,
-                                                    lambda_reg_U =lambda_reg_U, lambda_reg_P=lambda_reg_P)
+            U, P = self._alternating_least_squares(U=U, P=P, n_epochs = n_epochs,
+                                                   train_df=train_df, valid_df=valid_df,
+                                                   lambda_reg_U =lambda_reg_U, lambda_reg_P=lambda_reg_P)
         elif solver == 'sgd':
             U, P = self._stochastic_gradient_descent(P=P, U=U, n_epochs=n_epochs,
                                                     train_df=train_df, valid_df=valid_df,
